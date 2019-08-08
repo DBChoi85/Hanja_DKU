@@ -2,16 +2,20 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
+import os
 
 from PIL import Image, ImageDraw
 
-seg_PATH = 'C:\\Users\\ialab\\Desktop\\Hanja_DKU-master\\col_result\\'
+seg_PATH = 'C:\\line_seg\\'
 
 
-def col_ch(array,final=False,j=0):
+def col_ch(array,array_ori,name,final=False,j=0):
     #data = pd.read_csv('seg_4.csv', header=None)
     n_row, n_col = array.shape
     #print(n_row, n_col)
+
+    if not os.path.isdir(seg_PATH) :
+        os.makedirs(seg_PATH)
 
     avg_col = list(np.mean(array, axis=0))
     # 평균값을 int로 변환
@@ -47,20 +51,27 @@ def col_ch(array,final=False,j=0):
     print(c_list)
 
     # data.iloc[:, 0:288]
+    count = 0
     for i in range(len(c_list) - 1):
         ind = i * 2
         if ind + 1 > len(c_list) - 1: break
         print(len(c_list))
         print(ind + 1)
-        seg = array[:,c_list[ind]: c_list[ind + 1]]
+        try:
+            seg = array_ori[:,c_list[ind]: c_list[ind + 1]]
+        except TypeError : break
         seg_array = seg.astype(int)
+        seg_h,seg_w = seg_array.shape
+        if seg_w <=40 :  continue
         image = Image.fromarray(seg_array).convert('RGB')
         # image.show()
         if final == True:
-            image.save('C:\\Users\\ialab\\Desktop\\Hanja_DKU-master\\final_result\\seg_2_%d_%d.jpg' % (j, i))
+            image.save('C:\\Users\\ialab\\Desktop\\Hanja_DKU-master\\final_result\\seg_3_%d_%d.jpg' % (j, i))
         else :
-            image.save(seg_PATH + 'seg_2_%d_%d.jpg' %(j,i))
+            image.save(seg_PATH + name+'_%d.jpg' %count)
+            count +=1
 
+    #os.startfile(seg_PATH)
     return 'col_result'
 
 '''

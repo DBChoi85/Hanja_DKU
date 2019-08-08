@@ -4,9 +4,15 @@ import cv2
 
 # import the necessary packages
 from tkinter import *
+from tkinter import messagebox
 from PIL import Image
 from PIL import ImageTk
 import tkinter.filedialog as filedialog
+
+from main_pix import line_seg
+import os
+
+seg_PATH = 'C:\\line_seg\\'
 
 x_start, y_start, x_end, y_end = 0, 0, 0, 0
 
@@ -56,12 +62,15 @@ def select_image():
         # load the image from disk, convert it to grayscale, and detect
         # edges in it
         oriImage = cv.imread(path_img)
+        oriImage = cv2.resize(oriImage, dsize=(640, 480), interpolation=cv2.INTER_AREA)
+
 
         if cropping:
 
             #cv2.rectangle(oriImage, (x_start, y_start), (x_end, y_end), (255, 0, 0), 2)
+
             cv2.imshow("image", oriImage)
-            cv2.namedWindow("image")
+            cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
             cv2.setMouseCallback("image", mouse_crop)
         else:
             print(cropping)
@@ -98,7 +107,25 @@ def mouse_crop(event, x, y, flags, param):
     global pil_result
     # grab references to the global variables
     global x_start, y_start, x_end, y_end, cropping
+    cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
+    r = cv2.selectROI("image", oriImage, False, False)
+    cv2.waitKey(0)
+    cv2.destroyWindow("image")
+    roi = oriImage[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
+    # roi = oriImage[refPoint[0][1]:refPoint[1][1], refPoint[0][0]:refPoint[1][0]]
+    # cv2.imshow("Cropped", roi)
+    pil_result = roi
+    # cv2.imshow("Image2", pil_result)
+    # cv2.waitKey(0)
 
+    pil_img = Image.fromarray(pil_result)
+
+    edged = ImageTk.PhotoImage(pil_img)
+    # update the pannels
+    panelB.configure(image=edged)
+    panelB.image = edged
+
+    '''
     # if the left mouse button was DOWN, start RECORDING
     # (x, y) coordinates and indicate that cropping is being
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -118,11 +145,18 @@ def mouse_crop(event, x, y, flags, param):
 
         refPoint = [(x_start, y_start), (x_end, y_end)]
         cv2.destroyWindow("image")
+        
 
         if len(refPoint) == 2:  # when two points were found
-            roi = oriImage[refPoint[0][1]:refPoint[1][1], refPoint[0][0]:refPoint[1][0]]
+            r = cv2.selectROI("image",oriImage,False,False)
+            cv2.waitKey(0)
+            cv2.destroyWindow("image")
+            roi = oriImage[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
+            #roi = oriImage[refPoint[0][1]:refPoint[1][1], refPoint[0][0]:refPoint[1][0]]
             #cv2.imshow("Cropped", roi)
             pil_result = roi
+            #cv2.imshow("Image2", pil_result)
+            #cv2.waitKey(0)
 
             pil_img = Image.fromarray(pil_result)
 
@@ -130,13 +164,29 @@ def mouse_crop(event, x, y, flags, param):
             # update the pannels
             panelB.configure(image=edged)
             panelB.image = edged
+            '''
 
 
 
+def line_seg_sub():
+    global path_img
+    global panelB
+    if panelB != None:
+        line_seg(path_img)
+
+        messagebox.showinfo("완료", 'Segment Complete')
+
+
+
+def open_dir():
+    if not os.path.isdir(seg_PATH) :
+        os.makedirs(seg_PATH)
+    os.startfile(seg_PATH)
 
 
 # initialize the window toolkit along with the two image panels
 root = Tk()
+
 panelA = None
 panelB = None
 path_img = None
@@ -147,10 +197,17 @@ pil_result = None
 # button the GUI
 btn = Button(root, text="Select an image", command=select_sub)
 btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
+btn = Button(root, text="Line segmented", command=line_seg_sub)
+btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
+btn = Button(root, text="Open foder", command=open_dir)
+btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
 btn = Button(root, text="Crop an image", command=crop_sub)
 btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
 btn = Button(root, text="Save an segmented image", command=save_seg_image)
 btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
+
+
+
 
 # kick off the GUI
 root.mainloop()
