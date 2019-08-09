@@ -6,10 +6,10 @@ import os
 
 from PIL import Image, ImageDraw
 
-seg_PATH = 'C:\\line_seg\\'
+#seg_PATH = 'C:\\line_seg\\'
 
 
-def col_ch(array,array_ori,name,final=False,j=0):
+def col_ch(array,array_ori,name,seg_PATH,final=False,j=0):
     #data = pd.read_csv('seg_4.csv', header=None)
     n_row, n_col = array.shape
     #print(n_row, n_col)

@@ -8,11 +8,16 @@ from tkinter import messagebox
 from PIL import Image
 from PIL import ImageTk
 import tkinter.filedialog as filedialog
+import numpy.random.common
+import numpy.random.bounded_integers
+import numpy.random.entropy
 
 from main_pix import line_seg
 import os
 
-seg_PATH = 'C:\\line_seg\\'
+seg_PATH = None
+seg_PATH_1 = 'C:\\line_seg(목판)\\'
+seg_PATH_2 = 'C:\\line_seg(필사)\\'
 
 x_start, y_start, x_end, y_end = 0, 0, 0, 0
 
@@ -23,9 +28,20 @@ def crop_sub():
         cropping = True
         select_image()
 
-def select_sub():
+def select_sub():#목판
     global cropping
     global path_img
+    global seg_PATH
+    seg_PATH = seg_PATH_1
+    path_img = None
+    cropping = False
+    select_image()
+
+def select_sub_2():
+    global cropping
+    global path_img
+    global seg_PATH
+    seg_PATH = seg_PATH_2
     path_img = None
     cropping = False
     select_image()
@@ -33,11 +49,12 @@ def select_sub():
 
 def save_seg_image():
     global pil_result
+    global ori_pil_result
     global panelB
     if panelB != None:
         file = filedialog.asksaveasfile(mode='w', defaultextension=".jpg")
         if file:
-            pil_img = Image.fromarray(pil_result)
+            pil_img = Image.fromarray(ori_pil_result)
             #cv2.imshow("img",pil_result)
             pil_img.save(file)  # saves the image to the input file name.
 
@@ -49,6 +66,10 @@ def select_image():
     global pil_result
     global path_img
     global oriImage
+    global seg_PATH
+    global ori_Image
+    global categori
+
 
 
     # open a file chooser dialog and allow the user to select an input
@@ -57,12 +78,19 @@ def select_image():
         path = filedialog.askopenfilename()
         path_img  = path
 
+
     # ensure a file path was selected
     if len(path_img) > 0:
         # load the image from disk, convert it to grayscale, and detect
         # edges in it
-        oriImage = cv.imread(path_img)
-        oriImage = cv2.resize(oriImage, dsize=(640, 480), interpolation=cv2.INTER_AREA)
+        ori_Image = cv.imread(path_img)
+
+        if seg_PATH == seg_PATH_1:  # 목판
+            oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+            categori = 1
+        elif seg_PATH == seg_PATH_2 :#필사
+            oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=0.25,fy=0.25, interpolation=cv2.INTER_AREA)
+            categori = 2
 
 
         if cropping:
@@ -72,6 +100,7 @@ def select_image():
             cv2.imshow("image", oriImage)
             cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
             cv2.setMouseCallback("image", mouse_crop)
+
         else:
             print(cropping)
             #oriImage = cv.imread(path)
@@ -105,16 +134,24 @@ def select_image():
 def mouse_crop(event, x, y, flags, param):
     global panelB
     global pil_result
+    global ori_Image
+    global categori
+    global ori_pil_result
     # grab references to the global variables
     global x_start, y_start, x_end, y_end, cropping
     cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
     r = cv2.selectROI("image", oriImage, False, False)
-    cv2.waitKey(0)
     cv2.destroyWindow("image")
     roi = oriImage[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
+    if categori == 1:  # 목판
+        ori_roi = ori_Image[int(r[1])*2:int(r[1] + r[3])*2, int(r[0])*2:int(r[0] + r[2])*2]
+    elif categori == 2 :# 목판
+        ori_roi = ori_Image[int(r[1])*4:int(r[1] + r[3])*4, int(r[0])*4:int(r[0] + r[2])*4]
+
     # roi = oriImage[refPoint[0][1]:refPoint[1][1], refPoint[0][0]:refPoint[1][0]]
     # cv2.imshow("Cropped", roi)
     pil_result = roi
+    ori_pil_result = ori_roi
     # cv2.imshow("Image2", pil_result)
     # cv2.waitKey(0)
 
@@ -171,8 +208,9 @@ def mouse_crop(event, x, y, flags, param):
 def line_seg_sub():
     global path_img
     global panelB
+    global seg_PATH
     if panelB != None:
-        line_seg(path_img)
+        line_seg(path_img,seg_PATH)
 
         messagebox.showinfo("완료", 'Segment Complete')
 
@@ -186,6 +224,8 @@ def open_dir():
 
 # initialize the window toolkit along with the two image panels
 root = Tk()
+button_frame = Frame(root)
+button_frame.pack(side = 'right')
 
 panelA = None
 panelB = None
@@ -195,15 +235,17 @@ pil_result = None
 # create a button, then when pressed, will trigger a file chooser
 # dialog and allow the user to select an input image; then add the
 # button the GUI
-btn = Button(root, text="Select an image", command=select_sub)
+btn = Button(button_frame, text="Select an image(목판)", command=select_sub)
 btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
-btn = Button(root, text="Line segmented", command=line_seg_sub)
+btn = Button(button_frame, text="Select an image(필사)", command=select_sub_2)
 btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
-btn = Button(root, text="Open foder", command=open_dir)
+btn = Button(button_frame, text="Line segmented", command=line_seg_sub)
 btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
-btn = Button(root, text="Crop an image", command=crop_sub)
+btn = Button(button_frame, text="Open foder", command=open_dir)
 btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
-btn = Button(root, text="Save an segmented image", command=save_seg_image)
+btn = Button(button_frame, text="Crop an image", command=crop_sub)
+btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
+btn = Button(button_frame, text="Save an segmented image", command=save_seg_image)
 btn.pack(side="top", anchor = "center",expand="yes", padx="10", pady="10")
 
 

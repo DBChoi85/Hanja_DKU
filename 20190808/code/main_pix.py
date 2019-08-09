@@ -9,9 +9,9 @@ import cv2 as cv
 import os
 
 #path = 'C:\\Users\\ialab\\Desktop\\Hanja_DKU-master\\sample\\sample02.jpg'
-seg_PATH = 'C:\\line_seg\\'
+#seg_PATH = 'C:\\line_seg\\'
 
-def line_seg(path):
+def line_seg(path,seg_PATH):
 
     array_ori = array_load(path)
 
@@ -49,7 +49,7 @@ def line_seg(path):
     array_many_load(filename,'row',final = True)
     '''
 
-    filename = col_ch(array,array_ori,file_name)
+    filename = col_ch(array,array_ori,file_name,seg_PATH)
     #print(filename)
     ##filename = col_ch(array)
     #filename = array_many_load(filename,'row')
