@@ -1,5 +1,5 @@
 from convert import array_load
-from convert2 import array_many_load
+#from convert2 import array_many_load
 from row_segment import row_ch
 from col_segment import col_ch
 import numpy as np
