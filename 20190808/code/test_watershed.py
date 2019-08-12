@@ -16,8 +16,8 @@ from main_pix import line_seg
 import os
 
 seg_PATH = None
-seg_PATH_1 = 'C:\\line_seg(목판)\\'
-seg_PATH_2 = 'C:\\line_seg(필사)\\'
+seg_PATH_1 = 'C:\\line_seg(block)\\'
+seg_PATH_2 = 'C:\\line_seg(hand)\\'
 
 x_start, y_start, x_end, y_end = 0, 0, 0, 0
 
@@ -84,6 +84,9 @@ def select_image():
         # load the image from disk, convert it to grayscale, and detect
         # edges in it
         ori_Image = cv.imread(path_img)
+        print(path_img)
+        #ori_h = ori_Image.shape[0]
+        #ori_w = ori_Image.shape[1]
 
         if seg_PATH == seg_PATH_1:  # 목판
             oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
