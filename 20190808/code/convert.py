@@ -21,7 +21,7 @@ def array_load(name):
     #img_threshold = cv2.adaptiveThreshold(dst, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 21, 5)
 
     # 가우시안 필터
-    img_gaussian = cv2.GaussianBlur(dst, (9, 9), 0)
+    img_gaussian = cv2.GaussianBlur(dst, (3, 3), 0)
     #img_gaussian2 = cv2.GaussianBlur(dst2, (9,9), 0)
 
     # otsu's Binarization
