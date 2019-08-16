@@ -13,13 +13,15 @@ import numpy.random.bounded_integers
 import numpy.random.entropy
 
 from main_pix import line_seg
-import webbrowser
 import os
+import webbrowser
 
 seg_PATH = None
 seg_PATH_0 = 'C:\\line_seg\\'
 seg_PATH_1 = 'C:\\line_seg(block)\\'
 seg_PATH_2 = 'C:\\line_seg(hand)\\'
+
+chrome_path = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s'
 
 x_start, y_start, x_end, y_end = 0, 0, 0, 0
 count = 100
@@ -206,7 +208,9 @@ def open_dir():
 
 
 def web_open():
-    webbrowser.open("http://www.robots.ox.ac.uk/~vgg/software/via/via-1.0.6.html")
+    url = "http://www.robots.ox.ac.uk/~vgg/software/via/via-1.0.6.html"
+    webbrowser.get(chrome_path).open(url)
+    #webbrowser.open("http://www.robots.ox.ac.uk/~vgg/software/via/via-1.0.6.html")
 
 
 # initialize the window toolkit along with the two image panels
