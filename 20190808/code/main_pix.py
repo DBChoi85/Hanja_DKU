@@ -10,7 +10,7 @@ def line_seg(path,seg_PATH):
     dir, file = os.path.split(path)
     path_split_d = file.split('.')
     file_name = path_split_d[0]
-    print(file_name)
+    #print(file_name)
 
     h,w= array_ori.shape
     print(h)

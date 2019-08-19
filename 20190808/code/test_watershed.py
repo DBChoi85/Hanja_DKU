@@ -20,6 +20,7 @@ seg_PATH = None
 seg_PATH_0 = 'C:\\line_seg\\'
 seg_PATH_1 = 'C:\\line_seg(block)\\'
 seg_PATH_2 = 'C:\\line_seg(hand)\\'
+cropping = False
 
 chrome_path = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s'
 
@@ -60,8 +61,10 @@ def save_seg_image():
     global ori_pil_result
     global panelB
     global count
+    global cropping
 
-    if panelB != None:
+    if panelB != None and cropping != True:
+        #print(cropping)
         file = filedialog.asksaveasfile(mode='w', defaultextension=".jpg", initialfile='cut_%d.jpg' %count)
         if file:
             pil_img = Image.fromarray(ori_pil_result)
@@ -79,6 +82,7 @@ def select_image():
     global seg_PATH
     global ori_Image
     global categori
+    global cropping
 
     # open a file chooser dialog and allow the user to select an input
     # image
@@ -93,7 +97,7 @@ def select_image():
         # load the image from disk, convert it to grayscale, and detect
         # edges in it
         ori_Image = cv.imread(path_img)
-        print(path_img)
+        #print(path_img)
         # ori_h = ori_Image.shape[0]
         # ori_w = ori_Image.shape[1]
 
@@ -118,9 +122,12 @@ def select_image():
             oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
             categori = 1
             #pil_result = oriImage
+            #
             cv2.imshow("image", oriImage)
             cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
             cv2.setMouseCallback("image", mouse_crop)
+
+            cropping = False
 
         else:
             #print(cropping)
@@ -159,7 +166,8 @@ def mouse_crop(event, x, y, flags, param):
     global ori_pil_result
     # grab references to the global variables
     global x_start, y_start, x_end, y_end, cropping
-    cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
+
+    #cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
     r = cv2.selectROI("image", oriImage, False, False)
     cv2.destroyWindow("image")
     roi = oriImage[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
@@ -188,6 +196,7 @@ def mouse_crop(event, x, y, flags, param):
 
 
 
+
 def line_seg_sub():
     global path_img
     global panelB
@@ -201,7 +210,7 @@ def line_seg_sub():
 def open_dir():
     global seg_PATH
     seg_PATH = seg_PATH_0 # 기본 활자로
-    print(seg_PATH)
+    #print(seg_PATH)
     if not os.path.isdir(seg_PATH):
         os.makedirs(seg_PATH)
     os.startfile(seg_PATH)
@@ -215,6 +224,8 @@ def web_open():
 
 # initialize the window toolkit along with the two image panels
 root = Tk()
+root.geometry("600x700")
+root.resizable(True, True)
 button_frame = Frame(root)
 button_frame.pack(side='right')
 
@@ -226,13 +237,13 @@ pil_result = None
 # create a button, then when pressed, will trigger a file chooser
 # dialog and allow the user to select an input image; then add the
 # button the GUI
-btn = Button(button_frame, text="활자 선택", command=select_sub)
+btn = Button(button_frame, text="이미지 선택", command=select_sub)
 btn.pack(side="top", anchor="center", expand="yes", padx="10", pady="10")
 #btn = Button(button_frame, text="Select an image(필사)", command=select_sub_2)
 #btn.pack(side="top", anchor="center", expand="yes", padx="10", pady="10")
 btn = Button(button_frame, text="라인 자르기", command=line_seg_sub)
 btn.pack(side="top", anchor="center", expand="yes", padx="10", pady="10")
-btn = Button(button_frame, text="폴더 열기", command=open_dir)
+btn = Button(button_frame, text="결과 보기", command=open_dir)
 btn.pack(side="top", anchor="center", expand="yes", padx="10", pady="10")
 btn = Button(button_frame, text="이미지 자르기", command=crop_sub)
 btn.pack(side="top", anchor="center", expand="yes", padx="10", pady="10")
