@@ -3,6 +3,8 @@ import pandas as pd
 import cv2
 import csv
 
+MAX_FEATURES = 500
+GOOD_MATCH_PERCENT = 0.15
 
 seg_PATH = 'C:\\Users\\ialab\\Desktop\\Hanja_DKU-master\\sample\\'
 
@@ -26,6 +28,39 @@ def array_load(name):
 
     # otsu's Binarization
     ret, img_otsu = cv2.threshold(img_gaussian, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+    orb = cv2.ORB_create(MAX_FEATURES)
+    keypoints1, descriptors1 = orb.detectAndCompute(img_otsu, None)
+    keypoints2, descriptors2 = orb.detectAndCompute(img_otsu, None)
+
+    matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
+    matches = matcher.match(descriptors1, descriptors2, None)
+
+    matches.sort(key=lambda x: x.distance, reverse=False)
+
+    numGoodMatches = int(len(matches) * GOOD_MATCH_PERCENT)
+    matches = matches[:numGoodMatches]
+
+    # Draw top matches
+    imMatches = cv2.drawMatches(img_otsu, keypoints1, img_otsu, keypoints2, matches, None)
+    cv2.imwrite("matches.jpg", imMatches)
+
+    # Extract location of good matches
+    points1 = np.zeros((len(matches), 2), dtype=np.float32)
+    points2 = np.zeros((len(matches), 2), dtype=np.float32)
+
+    for i, match in enumerate(matches):
+        points1[i, :] = keypoints1[match.queryIdx].pt
+        points2[i, :] = keypoints2[match.trainIdx].pt
+
+    # Find homography
+    h, mask = cv2.findHomography(points1, points2, cv2.RANSAC)
+
+    # Use homography
+    height, width, channels = img_otsu.shape
+    im1Reg = cv2.warpPerspective(img_otsu, h, (width, height))
+
+
     #ret2, img_otsu2 = cv2.threshold(img_gaussian2, 0 , 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
     #Prob_hough(img_otsu, 1500, 1000, 500)
@@ -40,7 +75,7 @@ def array_load(name):
     #cv2.destroyAllWindows()
 
 
-    test = np.array(img_otsu)
+    test = np.array(im1Reg)
 
     #cvs_file = open('output_hist.csv', 'w', newline='')
     #cvs_writer = csv.writer(cvs_file)
