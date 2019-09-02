@@ -6,10 +6,18 @@ import csv
 
 seg_PATH = 'C:\\Users\\ialab\\Desktop\\Hanja_DKU-master\\sample\\'
 
+def hangulFilePathImageRead ( filePath ) :
+
+    stream = open( filePath.encode("utf-8") , "rb")
+    bytes = bytearray(stream.read())
+    numpyArray = np.asarray(bytes, dtype=np.uint8)
+
+    return cv2.imdecode(numpyArray , cv2.IMREAD_UNCHANGED)
 
 def array_load(name):
     # 이미지 로드
-    img = cv2.imread(name, cv2.IMREAD_UNCHANGED)
+    #img = cv2.imread(name, cv2.IMREAD_UNCHANGED)
+    img = hangulFilePathImageRead(name)
     #img2 = cv2.imread('sample01.jpg', cv2.IMREAD_UNCHANGED)
     # 이미지 그레이 스케일 화
     dst = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -26,6 +34,8 @@ def array_load(name):
 
     # otsu's Binarization
     ret, img_otsu = cv2.threshold(img_gaussian, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    #img_otsu = cv2.erode(img_otsu, None, iterations=3)
+    img_otsu = cv2.dilate(img_otsu, None, iterations=1)
     #ret2, img_otsu2 = cv2.threshold(img_gaussian2, 0 , 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
     #Prob_hough(img_otsu, 1500, 1000, 500)
@@ -41,15 +51,17 @@ def array_load(name):
 
 
     test = np.array(img_otsu)
+    print("test",test)
+    #test = np.array(dst)
 
     #cvs_file = open('output_hist.csv', 'w', newline='')
     #cvs_writer = csv.writer(cvs_file)
-    for row in test:
+    #for row in test:
         #cvs_writer.writerow(row)
-        print(row)
+        #print(row)
 
     #cvs_file.close()
-    return test
+    return test , dst
 
     '''
     test2 = np.array(img_otsu2)

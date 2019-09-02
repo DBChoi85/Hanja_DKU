@@ -30,6 +30,15 @@ x, y ,xx, yy = 0,0,0,0
 count = 100
 
 
+def hangulFilePathImageRead ( filePath ) :
+
+    stream = open( filePath.encode("utf-8") , "rb")
+    bytes = bytearray(stream.read())
+    numpyArray = np.asarray(bytes, dtype=np.uint8)
+
+    return cv2.imdecode(numpyArray , cv2.IMREAD_UNCHANGED)
+
+
 def down(event):
     global canvas
     global rect
@@ -184,13 +193,19 @@ def select_image():
     #    path = filedialog.askopenfilename()
     #    path_img = path
     path = filedialog.askopenfilename()
+    #print("path", path)
+    #path = hangulFilePathImageRead(path)
     path_img = path
+    #path_img = Image.fromarray(path_img)
+    #print("path_img", path_img)
 
     # ensure a file path was selected
     if len(path_img) > 0:
         # load the image from disk, convert it to grayscale, and detect
         # edges in it
-        ori_Image = cv.imread(path_img)
+
+        #ori_Image = cv.imread(path)
+        ori_Image = hangulFilePathImageRead(path_img)
         #print(path_img)
         # ori_h = ori_Image.shape[0]
         # ori_w = ori_Image.shape[1]
