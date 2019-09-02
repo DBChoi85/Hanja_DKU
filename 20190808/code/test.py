@@ -8,6 +8,7 @@ from tkinter import messagebox
 from PIL import Image
 from PIL import ImageTk
 import tkinter.filedialog as filedialog
+from PIL import Image, ImageTk
 import numpy.random.common
 import numpy.random.bounded_integers
 import numpy.random.entropy
@@ -20,18 +21,111 @@ seg_PATH = None
 seg_PATH_0 = 'C:\\line_seg\\'
 seg_PATH_1 = 'C:\\line_seg(block)\\'
 seg_PATH_2 = 'C:\\line_seg(hand)\\'
-cropping = False
+# cropping = False
 
 chrome_path = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s'
 
 x_start, y_start, x_end, y_end = 0, 0, 0, 0
+x, y, xx, yy = 0, 0, 0, 0
 count = 100
+
+
+def hangulFilePathImageRead(filePath):
+    stream = open(filePath.encode("utf-8"), "rb")
+    bytes = bytearray(stream.read())
+    numpyArray = np.asarray(bytes, dtype=np.uint8)
+
+    return cv2.imdecode(numpyArray, cv2.IMREAD_UNCHANGED)
+
+
+def down(event):
+    global canvas
+    global rect
+    global start_x, start_y
+    start_x = event.x
+    start_y = event.y
+    rect = canvas.create_rectangle(start_x, start_y, start_x + 1, start_y + 1, width=4, outline='blue')
+
+
+def draw(event):
+    global canvas
+    global rect, start_x, start_y, curX, curY
+
+    curX, curY = event.x, event.y
+    canvas.coords(rect, start_x, start_y, curX, curY)
+
+
+def up(event):
+    global canvas, t2
+    global x, y, xx, yy
+    global panelA, panelB
+    global pil_result
+    global path_img
+    global oriImage
+    global seg_PATH
+    global ori_Image
+    global categori
+    global cropping
+    global canvas
+    global panelB
+    global ori_pil_result
+
+    if start_x > event.x:
+        x = curX
+    else:
+        x = start_x
+
+    if start_y > event.y:
+        y = curY
+    else:
+        y = start_y
+
+    if start_x < event.x:
+        xx = curX
+    else:
+        xx = start_x
+
+    if start_y < event.y:
+        yy = curY
+    else:
+        yy = start_y
+
+    print(x, y, xx, yy)
+
+    roi = oriImage[int(y):int(yy), int(x):int(xx)]
+    if categori == 1:  # 목판
+        ori_roi = ori_Image[int(y) * 2:int(yy) * 2, int(x) * 2:int(xx) * 2]
+    elif categori == 2:  # 목판
+        ori_roi = ori_Image[int(x) * 4:int(x + xx) * 4, int(y) * 4:int(y + yy) * 4]
+
+    pil_result = roi
+    ori_pil_result = ori_roi
+
+    pil_img = Image.fromarray(pil_result)
+
+    edged = ImageTk.PhotoImage(pil_img)
+    # update the pannels
+    if panelB is None:
+        # while the second panel will store the edge map
+        panelB = Label(image=edged)
+        panelB.image = edged
+        panelB.pack(side="right", padx=10, pady=10)
+        # otherwise, update the image panels
+    else:
+        # update the pannels
+        panelB.configure(image=edged)
+        panelB.image = edged
+
+    t2.destroy()
+    cropping = False
+    # im2 = im.crop([x, y, xx, yy])
+    # im2.show()
 
 
 def crop_sub():
     global cropping
     global panelB
-    #if panelB != None:
+    # if panelB != None:
     cropping = True
     select_image()
 
@@ -63,9 +157,12 @@ def save_seg_image():
     global count
     global cropping
 
+    print('save')
+    print(cropping)
+
     if panelB != None and cropping != True:
-        #print(cropping)
-        file = filedialog.asksaveasfile(mode='w', defaultextension=".jpg", initialfile='cut_%d.jpg' %count)
+        # print(cropping)
+        file = filedialog.asksaveasfile(mode='w', defaultextension=".jpg", initialfile='cut_%d.jpg' % count)
         if file:
             pil_img = Image.fromarray(ori_pil_result)
             # cv2.imshow("img",pil_result)
@@ -83,34 +180,51 @@ def select_image():
     global ori_Image
     global categori
     global cropping
+    global canvas
+    global panelB
+    global ori_pil_result, t2
+    # grab references to the global variables
+    global x, y, xx, yy
+    x, y, xx, yy = 0, 0, 0, 0
 
     # open a file chooser dialog and allow the user to select an input
     # image
-    #if path_img == None:
+    # if path_img == None:
     #    path = filedialog.askopenfilename()
     #    path_img = path
     path = filedialog.askopenfilename()
+    # print("path", path)
+    # path = hangulFilePathImageRead(path)
     path_img = path
+    # path_img = Image.fromarray(path_img)
+    # print("path_img", path_img)
 
     # ensure a file path was selected
     if len(path_img) > 0:
         # load the image from disk, convert it to grayscale, and detect
         # edges in it
-        ori_Image = cv.imread(path_img)
-        #print(path_img)
+
+        # ori_Image = cv.imread(path)
+        ori_Image = hangulFilePathImageRead(path_img)
+        # print(path_img)
         # ori_h = ori_Image.shape[0]
         # ori_w = ori_Image.shape[1]
-
+        '''
         if seg_PATH == seg_PATH_0:  # 목판
             oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
             categori = 1
         elif seg_PATH == seg_PATH_2:  # 필사
             oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=0.25, fy=0.25, interpolation=cv2.INTER_AREA)
             categori = 2
+        '''
 
+        oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+        categori = 1
+
+        print(cropping)
         if cropping:
             dir, file = os.path.split(path)
-            #print(dir)
+            # print(dir)
             '''
             if dir == 'C:/line_seg(block)':
                 oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
@@ -119,29 +233,41 @@ def select_image():
                 oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=0.25, fy=0.25, interpolation=cv2.INTER_AREA)
                 categori = 2
             '''
-            oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+            fx_1 = 0.5
+            fy_1 = 0.5
+            oriImage = cv2.resize(ori_Image, dsize=(0, 0), fx=fx_1, fy=fy_1, interpolation=cv2.INTER_AREA)
             categori = 1
-            #pil_result = oriImage
-            #
-            cv2.imshow("image", oriImage)
-            cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
-            cv2.setMouseCallback("image", mouse_crop)
+            # print(oriImage.shape)
+            h, w, d = oriImage.shape
+            # gray = cv2.cvtColor(oriImage, cv2.COLOR_BGR2GRAY)
+            # print(gray.shape)
+            img = Image.fromarray(oriImage)
+            tk_im = ImageTk.PhotoImage(img)
+            t2 = Toplevel(root)
+            t2.title("이미지 자르기")
+            canvas = Canvas(t2, width=w + 10, height=h + 10)
+            canvas.create_image(0, 0, anchor='nw', image=tk_im)
+            t2.update()
+            canvas.bind("<ButtonPress-1>", down)
+            canvas.bind("<B1-Motion>", draw)
+            canvas.bind("<ButtonRelease-1>", up)
+            canvas.pack()
 
-            cropping = False
+            t2.mainloop()
+
+            print(x, y, xx, yy)
+
+
+
 
         else:
-            #print(cropping)
+            # print(cropping)
             # oriImage = cv.imread(path)
             pil_result = oriImage
 
-        #pil_result = oriImage
-
+        # pil_result = oriImage
         pil_img = Image.fromarray(pil_result)
 
-        # pil_gray = Image.fromarray(gray)
-
-        # ...and then to ImageTk format
-        # image = ImageTk.PhotoImage(pil_gray)
         edged = ImageTk.PhotoImage(pil_img)
 
         # if the panels are None, initialize them
@@ -158,7 +284,8 @@ def select_image():
             panelB.image = edged
 
 
-def mouse_crop(event, x, y, flags, param):
+'''
+def mouse_crop(event):
     global panelB
     global pil_result
     global ori_Image
@@ -166,16 +293,29 @@ def mouse_crop(event, x, y, flags, param):
     global ori_pil_result
     # grab references to the global variables
     global x_start, y_start, x_end, y_end, cropping
+    global x, y, xx, yy
+
+    canvas.bind("<ButtonPress-1>", down)
+    canvas.bind("<B1-Motion>", draw)
+    canvas.bind("<ButtonRelease-1>", up)
+
+
+    roi = oriImage[int(x):int(x + xx), int(y):int(y + yy)]
+    if categori == 1:  # 목판
+        ori_roi = ori_Image[int(x) * 2:int(x + xx) * 2, int(y) * 2:int(y + yy) * 2]
+    elif categori == 2:  # 목판
+        ori_roi = ori_Image[int(x) * 4:int(x + xx) * 4, int(y) * 4:int(y + yy) * 4]
+
 
     #cv2.namedWindow("image", cv2.WINDOW_AUTOSIZE)
     r = cv2.selectROI("image", oriImage, False, False)
     cv2.destroyWindow("image")
     roi = oriImage[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
-    print(r)
     if categori == 1:  # 목판
         ori_roi = ori_Image[int(r[1]) * 2:int(r[1] + r[3]) * 2, int(r[0]) * 2:int(r[0] + r[2]) * 2]
     elif categori == 2:  # 목판
         ori_roi = ori_Image[int(r[1]) * 4:int(r[1] + r[3]) * 4, int(r[0]) * 4:int(r[0] + r[2]) * 4]
+
 
     pil_result = roi
     ori_pil_result = ori_roi
@@ -194,8 +334,7 @@ def mouse_crop(event, x, y, flags, param):
         # update the pannels
         panelB.configure(image=edged)
         panelB.image = edged
-
-
+'''
 
 
 def line_seg_sub():
@@ -210,8 +349,8 @@ def line_seg_sub():
 
 def open_dir():
     global seg_PATH
-    seg_PATH = seg_PATH_0 # 기본 활자로
-    #print(seg_PATH)
+    seg_PATH = seg_PATH_0  # 기본 활자로
+    # print(seg_PATH)
     if not os.path.isdir(seg_PATH):
         os.makedirs(seg_PATH)
     os.startfile(seg_PATH)
@@ -220,7 +359,7 @@ def open_dir():
 def web_open():
     url = "http://www.robots.ox.ac.uk/~vgg/software/via/via-1.0.6.html"
     webbrowser.get(chrome_path).open(url)
-    #webbrowser.open("http://www.robots.ox.ac.uk/~vgg/software/via/via-1.0.6.html")
+    # webbrowser.open("http://www.robots.ox.ac.uk/~vgg/software/via/via-1.0.6.html")
 
 
 # initialize the window toolkit along with the two image panels
@@ -229,6 +368,9 @@ root.geometry("600x700")
 root.resizable(True, True)
 button_frame = Frame(root)
 button_frame.pack(side='right')
+
+# root_can = Tk()
+
 
 panelA = None
 panelB = None
@@ -240,8 +382,8 @@ pil_result = None
 # button the GUI
 btn = Button(button_frame, text="이미지 선택", command=select_sub)
 btn.pack(side="top", anchor="center", expand="yes", padx="10", pady="10")
-#btn = Button(button_frame, text="Select an image(필사)", command=select_sub_2)
-#btn.pack(side="top", anchor="center", expand="yes", padx="10", pady="10")
+# btn = Button(button_frame, text="Select an image(필사)", command=select_sub_2)
+# btn.pack(side="top", anchor="center", expand="yes", padx="10", pady="10")
 btn = Button(button_frame, text="라인 자르기", command=line_seg_sub)
 btn.pack(side="top", anchor="center", expand="yes", padx="10", pady="10")
 btn = Button(button_frame, text="결과 보기", command=open_dir)
@@ -254,4 +396,4 @@ btn = Button(button_frame, text="웹 연결", command=web_open)
 btn.pack(side="top", anchor="center", expand="yes", padx="10", pady="10")
 
 # kick off the GUI
-root.mainloop()
+mainloop()
