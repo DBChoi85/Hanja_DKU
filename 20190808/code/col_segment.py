@@ -50,7 +50,7 @@ def col_ch(array,array_ori,name,seg_PATH,final=False,j=0):
         #print(len(c_list))
         #print(ind + 1)
         try:
-            seg = array_ori[:,c_list[ind]: c_list[ind + 1]]
+            seg = array_ori[:,c_list[ind]-9: c_list[ind + 1]+9]
         except TypeError : break
         seg_array = seg.astype(int)
         seg_h,seg_w = seg_array.shape
