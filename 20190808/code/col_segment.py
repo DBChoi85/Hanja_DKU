@@ -52,11 +52,11 @@ def col_ch(array,array_ori,name,seg_PATH,final=False,j=0):
         try:
             #comp = c_list[ind + 1] - c_list[ind]
             #print("comp : ",comp)
-            seg = array_ori[:,c_list[ind]-5: c_list[ind + 1]+5]
+            seg = array_ori[:,c_list[ind]-13: c_list[ind + 1]+13]
         except TypeError : break
         seg_array = seg.astype(int)
         seg_h,seg_w = seg_array.shape
-        if seg_w <=40 :  continue
+        if seg_w <=50 :  continue
         image = Image.fromarray(seg_array).convert('RGB')
         # image.show()
         if final == True:
